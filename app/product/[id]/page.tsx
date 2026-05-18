@@ -2,123 +2,46 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { categories } from "@/lib/products";
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import { getProductNameFromImage, parseProductRouteId } from "@/lib/utils";
 
 export default function ProductDetailsPage() {
   const params = useParams();
   const router = useRouter();
 
   const id = params.id as string;
-
-  // format: kitchen-utensils-0
-  const [slug, indexStr] = id.split("-");
-  const index = parseInt(indexStr);
+  const { slug, index } = parseProductRouteId(id);
 
   const category = categories.find((c) => c.slug === slug);
 
-  if (!category) return <div>Product not found</div>;
+  if (!category || !Number.isInteger(index) || index < 0 || index >= category.images.length) {
+    return <div>Product not found</div>;
+  }
 
   const images = category.images;
   const productImage = images[index];
-
-  const [selectedImage, setSelectedImage] = useState(
-    productImage || images[0]
-  );
-
-  let rawName = productImage ? productImage.split('/').pop()?.replace(/\.[^/.]+$/, "") || `${category.name} Product` : `${category.name} Product`;
-  if (/^\d+/.test(rawName) || rawName.length <= 2) {
-    rawName = `Premium ${category.name}`;
-  }
-  const fileName = rawName.replace(/[-_]/g, ' ');
+  const selectedImage = productImage;
+  const fileName = getProductNameFromImage(productImage, category.name);
   
-  // 🔥 Fake product data
   const product = {
     name: fileName,
     description: `Experience the exceptional quality of our ${fileName}. Crafted for durability and style, this product is perfect for any setting. Whether you are a professional or just looking for the best, the ${fileName} will exceed your expectations with its premium finish and reliable performance. Designed to elevate your everyday use, it combines functionality with a sleek profile.`,
     id: index,
   };
 
-  const sizes = ["Standard", "Medium", "Large"];
-  const colors = ["#1F2937", "#9CA3AF", "#FCA5A5", "#6EE7B7", "#93C5FD"];
-
-  // 🔥 More products = from other categories
-  const moreProducts = categories
-    .filter((c) => c.slug !== slug)
-    .flatMap((c) =>
-      c.images.map((img, i) => ({
-        slug: c.slug,
-        index: i,
-        image: img,
-      }))
-    );
-
-  const handlePrev = () => {
-    const currentIndex = images.indexOf(selectedImage);
-    const prev = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
-    setSelectedImage(images[prev]);
-  };
-
-  const handleNext = () => {
-    const currentIndex = images.indexOf(selectedImage);
-    const next = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
-    setSelectedImage(images[next]);
-  };
-
   return (
     <div className="w-full min-h-screen font-sans text-gray-900">
-      {/* <Navbar /> */}
-
-      {/* Full-bleed two-column split */}
       <div className="w-full flex flex-col lg:flex-row min-h-screen">
-
-        {/* Left Column: Image Gallery — white background */}
         <div className="w-full lg:w-1/2 bg-[#FAF9F6] flex flex-col items-center justify-center px-6 sm:px-10 lg:px-16 pt-20 lg:pt-28 pb-10">
-          {/* Main Image Wrapper */}
           <div className="relative w-full max-w-[520px] aspect-square md:aspect-[4/5] lg:aspect-square bg-white rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex items-center justify-center group">
-            {/* <button 
-              onClick={handlePrev}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur text-gray-800 p-2 rounded-full shadow-md hover:bg-white hover:scale-110 transition z-10 opacity-0 group-hover:opacity-100"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button> */}
-
             <img
               src={selectedImage}
               alt={product.name}
               className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
             />
-
-            {/* <button 
-              onClick={handleNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur text-gray-800 p-2 rounded-full shadow-md hover:bg-white hover:scale-110 transition z-10 opacity-0 group-hover:opacity-100"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button> */}
           </div>
-
-          {/* Thumbnails */}
-          {/* <div className="flex gap-3 mt-6 overflow-x-auto scrollbar-hide pb-2 w-full max-w-[520px] justify-center">
-            {images.slice(0, 5).map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedImage(img)}
-                className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
-                  selectedImage === img
-                    ? "border-[#2D3748] shadow-md scale-105"
-                    : "border-transparent shadow-sm opacity-60 hover:opacity-100"
-                }`}
-              >
-                <img src={img} className="w-full h-full object-cover bg-white" />
-              </button>
-            ))}
-          </div> */}
         </div>
 
-        {/* Right Column: Product Details — gray/lavender background, full-bleed */}
         <div className="w-full lg:w-1/2 bg-[#E8E6F0] flex flex-col justify-center px-6 sm:px-10 lg:px-16 pt-10 lg:pt-28 pb-10">
-          
           <p className="text-[#a0aab8] text-xs font-bold tracking-[0.15em] uppercase mb-3">
             SKU: {slug}-{index}
           </p>
@@ -151,8 +74,6 @@ export default function ProductDetailsPage() {
         </div>
       </div>
 
-      {/* Global FloatingWhatsApp is now handled by the layouts */}
-      
       <div className="bg-white py-16 mt-8 border-t border-gray-100 w-full px-6 sm:px-10 lg:px-16">
         <div className="w-full">
           {categories.map((cat) => (
@@ -168,11 +89,7 @@ export default function ProductDetailsPage() {
               
               <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-hide shrink-0 snap-x">
                 {cat.images.map((img, i) => {
-                  let rawFName = img.split('/').pop()?.replace(/\.[^/.]+$/, "") || "";
-                  if (/^\d+/.test(rawFName) || rawFName.length <= 2) {
-                    rawFName = `Premium ${cat.name}`;
-                  }
-                  const fName = rawFName.replace(/[-_]/g, ' ');
+                  const fName = getProductNameFromImage(img, cat.name);
 
                   return (
                     <div 
@@ -182,7 +99,11 @@ export default function ProductDetailsPage() {
                     >
                        <div className="relative p-3 pb-0">
                          <div className="rounded-xl overflow-hidden bg-white aspect-[4/5]">
-                           <img src={img} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-700" />
+                           <img
+                             src={img}
+                             alt={fName}
+                             className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-700"
+                           />
                          </div>
                        </div>
                        

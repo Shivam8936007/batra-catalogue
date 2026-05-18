@@ -17,6 +17,7 @@ export default function CategoryPage() {
   });
 
   const category = categories.find((c) => c.slug === slug);
+  const categoryName = category?.name ?? slug.replace(/-/g, " ");
   const images = category?.images || [];
 
   const activeFiltersCount = (filters.inStock ? 1 : 0) + (filters.onSale ? 1 : 0);
@@ -30,7 +31,7 @@ export default function CategoryPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl md:text-5xl font-forum capitalize text-[#1A202C] tracking-wide">
-              {slug.replace(/-/g, " ")} Collection
+              {categoryName} Collection
             </h1>
             <p className="text-sm text-gray-500 mt-2 uppercase tracking-widest font-medium">
               {images.length} Premium Items
@@ -96,7 +97,7 @@ export default function CategoryPage() {
         {/* PRODUCTS GRID */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 bg-transparent">
           {images.map((img, index) => {
-            const fileName = getProductNameFromImage(img, category?.name || "");
+            const fileName = getProductNameFromImage(img, categoryName);
             
             return (
               <div 
@@ -106,7 +107,11 @@ export default function CategoryPage() {
               >
                 <div className="relative p-3 pb-0">
                   <div className="rounded-xl overflow-hidden bg-[#FAF9F6] aspect-[4/5] relative">
-                    <img src={img} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" />
+                    <img
+                      src={img}
+                      alt={fileName}
+                      className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700"
+                    />
                     <div className="absolute top-2 left-2 bg-black/80 backdrop-blur-md text-white text-[10px] font-bold tracking-wider px-2.5 py-1.5 rounded uppercase">Featured</div>
                   </div>
                 </div>

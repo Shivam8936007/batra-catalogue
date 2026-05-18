@@ -12,5 +12,18 @@ export function getProductNameFromImage(img: string, categoryName: string): stri
   }
   
   // Replace underscores and hyphens with spaces for better readability
-  return rawFName.replace(/[-_]/g, ' ');
+  return rawFName.replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export function parseProductRouteId(id: string): { slug: string; index: number } {
+  const lastDashIndex = id.lastIndexOf("-");
+
+  if (lastDashIndex === -1) {
+    return { slug: id, index: -1 };
+  }
+
+  return {
+    slug: id.slice(0, lastDashIndex),
+    index: Number(id.slice(lastDashIndex + 1)),
+  };
 }
